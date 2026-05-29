@@ -1,18 +1,84 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
 datasource db {
   provider = "postgresql"
 }
 
-generator client {
-  provider = "prisma-client-js"
-  output = "../generated/client"
+model User {
+  id            String               @id @default(uuid())
+  email         String               @unique
+  name          String
+  password      String
+  refreshToken  String
+  role          Role                 @default(User)
+  createdAt     DateTime             @default(now())
+  updatedAt     DateTime             @updatedAt
+  subscriptions Subscription[]
+  access        SubscriptionAccess[]
+
+  @@map("users")
 }
 
-model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
+model Subscription {
+  id                 String                @id @default(uuid())
+  title              String                @unique
+  description        String?
+  amount             Float
+  currency           Currency              @default(INR)
+  frequency          Frequency
+  startDate          DateTime
+  endDate            DateTime
+  nextBillingDate    DateTime
+  status             Status                @default(Active)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  ownerId            String                @default(uuid())
+  owner              User                  @relation(fields: [ownerId], references: [id])
+  subscriptionAccess SubscriptionAccess[]
+
+  @@map("subscriptions")
+}
+
+model SubscriptionAccess {
+  id             String       @id @default(uuid())
+  userId         String
+  subscriptionId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  users          User         @relation(fields: [userId], references: [id])
+  subscriptions  Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@unique([userId, subscriptionId])
+  @@map("subscription_access")
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum Role {
+  User
+  Admin
+}
+
+enum Currency {
+  USD
+  INR
+}
+
+enum Status {
+  Active
+  Inactive
 }

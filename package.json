@@ -24,7 +24,7 @@
   "engines": {
     "node": ">=18"
   },
-  "packageManager": "pnpm@9.15.1",
+  "packageManager": "pnpm@11.4.0",
   "name": "with-prisma",
   "dependencies": {
     "@prisma/adapter-pg": "^7.2.0",

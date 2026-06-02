@@ -6,6 +6,8 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { PrismaModule } from './prisma/prisma.module';
 import configuration from './config/configuration';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -16,8 +18,31 @@ import configuration from './config/configuration';
     PrismaModule,
     AuthModule,
     UsersModule,
+    ThrottlerModule.forRoot([
+      {
+        name: "default",
+        limit: 100,
+        ttl: 60000
+      },
+      {
+        name: "auth",
+        limit: 5,
+        ttl: 60000
+      },
+      {
+        name: "refresh",
+        limit: 20,
+        ttl: 60000
+      }
+    ])
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    }
+  ],
 })
 export class AppModule {}

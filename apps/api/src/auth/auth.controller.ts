@@ -1,4 +1,5 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import { ApiConflictResponse, ApiCookieAuth, ApiCreatedResponse, ApiOperation, ApiUnauthorizedResponse } from '@nestjs/swagger';
@@ -30,6 +31,7 @@ export class AuthController {
     };
   }
 
+  @Throttle({ auth: { limit: 5, ttl: 60000 } })
   @Post('sign-up')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a new user' }) 
@@ -49,6 +51,7 @@ export class AuthController {
     return this.returnRefreshCookie(token, res);
   }
 
+  @Throttle({ auth: { limit: 5, ttl: 60000 } })
   @Post("sign-in")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Sign In" })
@@ -69,6 +72,7 @@ export class AuthController {
   }
 
   @UseGuards(RefreshTokenGuard)
+  @Throttle({ refresh: { limit: 20, ttl: 60000 } })
   @Post("refresh")
   @HttpCode(HttpStatus.OK)
   @ApiCreatedResponse({

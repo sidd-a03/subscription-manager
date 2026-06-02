@@ -32,7 +32,7 @@ export class UsersService {
         })
     }
 
-    async updateRtHash(userId: string, hashRt: string): Promise<void> {
+    async updateRtHash(userId: string, hashRt: string | null): Promise<void> {
         await this.prisma.user.update({
             where: {
                 id: userId

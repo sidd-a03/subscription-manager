@@ -9,6 +9,7 @@ import { RefreshTokenGuard } from './common/guards/refresh.guard';
 import { GetCurrentUser, GetCurrentUserId } from './common/decorators/user.decorator';
 import type { Response } from 'express';
 import type { Tokens } from './types';
+import { AuthGuard } from './common/guards/access.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -69,6 +70,25 @@ export class AuthController {
     const token = await this.authService.signIn(signInDto);
     
     return this.returnRefreshCookie(token, res);
+  }
+
+  @UseGuards(AuthGuard)
+  @Throttle({ auth: { limit: 5, ttl: 60000 }})
+  @Post("logout")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Logout" })
+  @ApiCreatedResponse({
+    description: "User successfully logged out"
+  })
+  @ApiUnauthorizedResponse({
+    description: "Invalid or expired access token"
+  })
+  async logout(
+    @GetCurrentUserId() userId: string,
+    @Res({ passthrough: true }) res: Response,
+  ): Promise<{ message: string }> {
+    res.clearCookie("refresh_token");
+    return this.authService.logout(userId);
   }
 
   @UseGuards(RefreshTokenGuard)

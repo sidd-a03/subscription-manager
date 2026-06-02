@@ -67,6 +67,13 @@ export class AuthService {
         return tokens;
     }
 
+    async logout(userId: string): Promise<{ message: string }> {
+        await this.userService.updateRtHash(userId, null);
+        return {
+            message: "User logout Successfully"
+        }      
+    }
+
     async geToken(userId: string, name: string): Promise<Tokens> {
         const jwtPayload = {
             sub: userId,

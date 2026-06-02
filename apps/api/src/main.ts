@@ -19,16 +19,18 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe());
   app.setGlobalPrefix("api");
 
-  const config = new DocumentBuilder()
-    .setTitle('Subscription Management')
-    .setDescription('Subscription Management API description')
-    .setVersion('1.0')
-    .addTag('Subscription Management')
-    .build();
-  const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('docs', app, documentFactory, {
-    useGlobalPrefix: true
-  });
+  if (!isProduction) {
+    const config = new DocumentBuilder()
+      .setTitle('Subscription Management')
+      .setDescription('Subscription Management API description')
+      .setVersion('1.0')
+      .addTag('Subscription Management')
+      .build();
+    const documentFactory = () => SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('docs', app, documentFactory, {
+      useGlobalPrefix: true
+    });
+  }
 
   await app.listen(process.env.PORT ?? 8080);
 }

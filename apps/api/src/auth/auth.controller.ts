@@ -13,6 +13,23 @@ import type { Tokens } from './types';
 export class AuthController {
   constructor(private readonly authService: AuthService) { }
 
+  private returnRefreshCookie(
+    token: Tokens,
+    res: Response
+  ) {
+
+    res.cookie("refresh_token", token.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    })
+
+    return {
+      access_token: token.access_token
+    };
+  }
+
   @Post('sign-up')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Register a new user' }) 
@@ -61,22 +78,5 @@ export class AuthController {
     const token = await this.authService.refreshToken(userId, refreshToken);
 
     return this.returnRefreshCookie(token, res);
-  }
-
-  private returnRefreshCookie(
-    token: Tokens,
-    res: Response
-  ) {
-
-    res.cookie("refresh_token", token.refresh_token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000
-    })
-
-    return {
-      access_token: token.access_token
-    };
   }
 }

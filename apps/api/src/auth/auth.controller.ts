@@ -1,7 +1,7 @@
 import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
-import { ApiConflictResponse, ApiCreatedResponse, ApiOperation, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiConflictResponse, ApiCookieAuth, ApiCreatedResponse, ApiOperation, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { RefreshTokenGuard } from './common/guards/refresh.guard';
@@ -70,6 +70,16 @@ export class AuthController {
 
   @UseGuards(RefreshTokenGuard)
   @Post("refresh")
+  @HttpCode(HttpStatus.OK)
+  @ApiCreatedResponse({
+    description: "User successfully refreshed tokens",
+    type: AuthResponseDto
+  })
+  @ApiUnauthorizedResponse({
+    description: "Invalid or expired refresh token"
+  })
+  @ApiOperation({ summary: "Refresh tokens" })
+  @ApiCookieAuth("refresh_token")
   async refreshToken(
     @GetCurrentUserId() userId: string,
     @GetCurrentUser("refreshToken") refreshToken: string,

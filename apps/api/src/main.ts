@@ -29,6 +29,13 @@ async function bootstrap() {
     .setDescription('Subscription Management API description')
     .setVersion('1.0')
     .addTag('Subscription Management')
+    .addBearerAuth()
+    .addCookieAuth("refresh_token", {
+      type: 'apiKey',
+      in: 'cookie',
+      name: 'refresh_token',
+      description: 'Refresh token cookie'
+    })
     .build();
     const documentFactory = () => SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('docs', app, documentFactory, {

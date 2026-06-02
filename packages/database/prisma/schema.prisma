@@ -4,8 +4,8 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
   moduleFormat = "cjs"
 }
 
@@ -19,6 +19,7 @@ model User {
   name          String
   password      String
   refreshToken  String?
+  avatarUrl     String?
   role          Role                 @default(User)
   createdAt     DateTime             @default(now())
   updatedAt     DateTime             @updatedAt
@@ -29,20 +30,20 @@ model User {
 }
 
 model Subscription {
-  id                 String                @id @default(uuid())
-  title              String                @unique
+  id                 String               @id @default(uuid())
+  title              String               @unique
   description        String?
   amount             Float
-  currency           Currency              @default(INR)
+  currency           Currency             @default(INR)
   frequency          Frequency
   startDate          DateTime
   endDate            DateTime
   nextBillingDate    DateTime
-  status             Status                @default(Active)
-  createdAt          DateTime              @default(now())
-  updatedAt          DateTime              @updatedAt
-  ownerId            String                @default(uuid())
-  owner              User                  @relation(fields: [ownerId], references: [id])
+  status             Status               @default(Active)
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  ownerId            String               @default(uuid())
+  owner              User                 @relation(fields: [ownerId], references: [id])
   subscriptionAccess SubscriptionAccess[]
 
   @@map("subscriptions")

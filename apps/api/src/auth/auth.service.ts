@@ -1,4 +1,4 @@
-import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import * as argon2 from 'argon2';
@@ -51,6 +51,9 @@ export class AuthService {
         if(!user)
             throw new UnauthorizedException("Invalid credentials");
 
+        if(!user.password)
+            throw new UnauthorizedException("This account uses Google sign-in. Please log in with Google.");
+
         const pepper = this.configService.get<string>("pepper.argon_pepper")
 
         const passwordMatch = await argon2.verify(user.password, userData.password, {
@@ -95,9 +98,10 @@ export class AuthService {
         return { access_token, refresh_token };
     }
 
-    async updateHashRt(userId: string, refresh_token: string): Promise<void> {
-
-        const hashRt = crypto.createHash("sha256").update(refresh_token).digest('hex');
+    async updateHashRt(userId: string, refresh_token: string | null): Promise<void> {
+        const hashRt = refresh_token
+            ? crypto.createHash("sha256").update(refresh_token).digest('hex')
+            : null;
 
         await this.userService.updateRtHash(userId, hashRt);
     }
@@ -120,5 +124,33 @@ export class AuthService {
         await this.updateHashRt(user.id, tokens.refresh_token);
 
         return tokens;
+    }
+
+    async googleLogIn(reqUser: any): Promise<Tokens> {
+        if(!reqUser)
+            throw new BadRequestException("No user from google");
+
+        let user = await this.userService.findByEmail(reqUser.email);
+
+        if(!user) {
+            user = await this.userService.create({
+                email: reqUser.email,
+                name: `${reqUser.firstName} ${reqUser.lastName}`,
+                password: null, // No password for Google-auth users
+                avatarUrl: reqUser.picture
+            });
+        } else if(!user.avatarUrl && reqUser.picture) {
+            await this.userService.updateProfilePic(
+                user.id,
+                reqUser.picture
+            )
+        }
+
+        const tokens = await this.geToken(user.id, user.name);
+        
+        await this.updateHashRt(user.id, tokens.refresh_token);
+
+        return tokens;
+        
     }
 }

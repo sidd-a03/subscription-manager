@@ -1,8 +1,8 @@
-import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
-import { ApiConflictResponse, ApiCookieAuth, ApiCreatedResponse, ApiOperation, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiConflictResponse, ApiCookieAuth, ApiCreatedResponse, ApiFoundResponse, ApiOperation, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { SignInDto } from './dto/sign-in.dto';
 import { RefreshTokenGuard } from './common/guards/refresh.guard';
@@ -10,6 +10,7 @@ import { GetCurrentUser, GetCurrentUserId } from './common/decorators/user.decor
 import type { Response } from 'express';
 import type { Tokens } from './types';
 import { AuthGuard } from './common/guards/access.guard';
+import { AuthGuard as GoogleAuthGuard } from '@nestjs/passport';
 
 @Controller('auth')
 export class AuthController {
@@ -112,5 +113,33 @@ export class AuthController {
     const token = await this.authService.refreshToken(userId, refreshToken);
 
     return this.returnRefreshCookie(token, res);
+  }
+
+  @Get('google')
+  @UseGuards(GoogleAuthGuard("google"))
+  @HttpCode(HttpStatus.OK)
+  async googleAuth() {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleAuthGuard("google"))
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Google OAuth callback' })
+  @ApiFoundResponse({
+    description: 'Successfully authenticated via Google. Redirects the user to the frontend dashboard with the access token in query parameters and sets the refresh token in an HTTP-only cookie.',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Authentication failed or unauthorized.',
+  })
+  async googleAuthRedirect(
+    @Req() req,
+    @Res({ passthrough: true }) res: Response
+  ) {
+    const token = await this.authService.googleLogIn(req.user);
+
+    this.returnRefreshCookie(token, res);
+
+    const frontendUrl = process.env.FRONTEND_URL;
+
+    return res.redirect(`${frontendUrl}/dashboard?token=${token.access_token}`);
   }
 }

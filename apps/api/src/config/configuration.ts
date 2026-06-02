@@ -9,5 +9,12 @@ export default () => ({
   },
   pepper: {
     argon_pepper: process.env.ARGON2_PEPPER!
+  },
+  google: {
+    client_id: process.env.GOOGLE_CLIENT_ID!,
+    client_secret: process.env.GOOGLE_CLIENT_SECRET!
+  },
+  backend: {
+    url: process.env.BACKEND_URL!
   }
 });

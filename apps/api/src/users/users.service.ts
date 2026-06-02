@@ -1,6 +1,13 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { SignUpDto } from 'src/auth/dto/sign-up.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
+
+interface CreateUserData {
+    name: string;
+    email: string;
+    password: string | null;
+    avatarUrl?: string | null;
+}
 
 @Injectable()
 export class UsersService {
@@ -22,12 +29,24 @@ export class UsersService {
         })
     }
 
-    async create(userData: SignUpDto) {
+    async create(userData: CreateUserData | SignUpDto) {
         return this.prisma.user.create({
             data: {
                 name: userData.name,
                 email: userData.email,
-                password: userData.password,
+                password: userData.password ?? null,
+                avatarUrl: userData.avatarUrl ?? null
+            }
+        })
+    }
+
+    async updateProfilePic(userId: string, avatarUrl: string): Promise<void> {
+        await this.prisma.user.update({
+            where: {
+                id: userId
+            },
+            data: {
+                avatarUrl: avatarUrl
             }
         })
     }

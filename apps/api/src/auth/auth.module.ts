@@ -6,10 +6,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthGuard } from './common/guards/access.guard';
 import { RefreshTokenGuard } from './common/guards/refresh.guard';
+import { GoogleStrategy } from './strategies/google.strategies';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
   imports: [
     UsersModule,
+    PassportModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
@@ -21,6 +24,6 @@ import { RefreshTokenGuard } from './common/guards/refresh.guard';
     })
   ],
   controllers: [AuthController],
-  providers: [AuthService, AuthGuard, RefreshTokenGuard],
+  providers: [AuthService, AuthGuard, RefreshTokenGuard, GoogleStrategy],
 })
 export class AuthModule { }

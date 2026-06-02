@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, ForbiddenException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from 'src/users/users.service';
 import { SignUpDto } from './dto/sign-up.dto';
 import * as argon2 from 'argon2';
@@ -6,6 +6,7 @@ import * as crypto from 'crypto';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Tokens } from './types';
+import { SignInDto } from './dto/sign-in.dto';
 
 @Injectable()
 export class AuthService {
@@ -41,6 +42,28 @@ export class AuthService {
         
         await this.updateHashRt(newUser.id, tokens.refresh_token);
         
+        return tokens;
+    }
+
+    async signIn(userData: SignInDto): Promise<Tokens> {
+        const user = await this.userService.findByEmail(userData.email);
+
+        if(!user)
+            throw new UnauthorizedException("Invalid credentials");
+
+        const pepper = this.configService.get<string>("pepper.argon_pepper")
+
+        const passwordMatch = await argon2.verify(user.password, userData.password, {
+            secret: Buffer.from(pepper!)
+        })
+
+        if(!passwordMatch)
+            throw new UnauthorizedException("Invalid credentials");
+
+        const tokens = await this.geToken(user.id, user.name);
+        
+        await this.updateHashRt(user.id, tokens.refresh_token);
+
         return tokens;
     }
 

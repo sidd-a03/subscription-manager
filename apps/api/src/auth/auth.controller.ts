@@ -1,10 +1,13 @@
-import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
-import { ApiConflictResponse, ApiCreatedResponse, ApiOperation } from '@nestjs/swagger';
+import { ApiConflictResponse, ApiCreatedResponse, ApiOperation, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { SignInDto } from './dto/sign-in.dto';
-import { Tokens } from './types';
+import { RefreshTokenGuard } from './common/guards/refresh.guard';
+import { GetCurrentUser, GetCurrentUserId } from './common/decorators/user.decorator';
+import type { Response } from 'express';
+import type { Tokens } from './types';
 
 @Controller('auth')
 export class AuthController {
@@ -20,8 +23,13 @@ export class AuthController {
   @ApiConflictResponse({ 
     description: 'User with this email already exists' 
   })
-  signUp(@Body() signUpDto: SignUpDto) {
-    return this.authService.signUp(signUpDto);
+  async signUp(
+    @Res({ passthrough: true }) res: Response,
+    @Body() signUpDto: SignUpDto
+  ) {
+    const token = await this.authService.signUp(signUpDto);
+
+    return this.returnRefreshCookie(token, res);
   }
 
   @Post("sign-in")
@@ -31,10 +39,44 @@ export class AuthController {
     description: "User successfully signed in and tokens generated",
     type: AuthResponseDto
   })
-  @ApiConflictResponse({
+  @ApiUnauthorizedResponse({
     description: "Invalid credentials"
   })
-  signIn(@Body() signInDto: SignInDto): Promise<Tokens> {
-    return this.authService.signIn(signInDto);
+  async signIn(
+    @Res({ passthrough: true }) res: Response,
+    @Body() signInDto: SignInDto
+  ) {
+    const token = await this.authService.signIn(signInDto);
+    
+    return this.returnRefreshCookie(token, res);
+  }
+
+  @UseGuards(RefreshTokenGuard)
+  @Post("refresh")
+  async refreshToken(
+    @GetCurrentUserId() userId: string,
+    @GetCurrentUser("refreshToken") refreshToken: string,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    const token = await this.authService.refreshToken(userId, refreshToken);
+
+    return this.returnRefreshCookie(token, res);
+  }
+
+  private returnRefreshCookie(
+    token: Tokens,
+    res: Response
+  ) {
+
+    res.cookie("refresh_token", token.refresh_token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    })
+
+    return {
+      access_token: token.access_token
+    };
   }
 }

@@ -94,4 +94,24 @@ export class AuthService {
 
         await this.userService.updateRtHash(userId, hashRt);
     }
+
+    async refreshToken(userId: string, incomingRefreshToken: string): Promise<Tokens> {
+        const user = await this.userService.findById(userId);
+
+        if(!user || !user.refreshToken)
+            throw new ForbiddenException("Access Denied");
+
+        const incomingTokenHash = crypto.createHash("sha256").update(incomingRefreshToken).digest('hex');
+        
+        const matchRefreshToken = crypto.timingSafeEqual(Buffer.from(user.refreshToken), Buffer.from(incomingTokenHash));
+        
+        if(!matchRefreshToken)
+            throw new ForbiddenException("Access Denied");
+        
+        const tokens = await this.geToken(user.id, user.name);
+        
+        await this.updateHashRt(user.id, tokens.refresh_token);
+
+        return tokens;
+    }
 }

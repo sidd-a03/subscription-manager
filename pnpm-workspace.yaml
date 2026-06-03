@@ -7,6 +7,7 @@ allowBuilds:
   '@scarf/scarf': true
   argon2: true
   esbuild: false
+  msw: true
   prisma: true
   sharp: false
   unrs-resolver: false
@@ -18,3 +19,4 @@ minimumReleaseAgeExclude:
   - '@turbo/windows-64@2.9.16'
   - '@turbo/windows-arm64@2.9.16'
   - turbo@2.9.16
+  - axios@1.17.0

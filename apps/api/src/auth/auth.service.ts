@@ -132,6 +132,9 @@ export class AuthService {
 
         let user = await this.userService.findByEmail(reqUser.email);
 
+        if(user && user.password)
+            throw new ConflictException("EmailAlreadyInUse");
+            
         if(!user) {
             user = await this.userService.create({
                 email: reqUser.email,

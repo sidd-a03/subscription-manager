@@ -134,12 +134,21 @@ export class AuthController {
     @Req() req,
     @Res({ passthrough: true }) res: Response
   ) {
-    const token = await this.authService.googleLogIn(req.user);
-
-    this.returnRefreshCookie(token, res);
-
     const frontendUrl = process.env.FRONTEND_URL;
+    
+    try {
+      const token = await this.authService.googleLogIn(req.user);
 
-    return res.redirect(`${frontendUrl}/dashboard?token=${token.access_token}`);
+      this.returnRefreshCookie(token, res);
+
+      return res.redirect(`${frontendUrl}/auth/callback?token=${token.access_token}`);
+    } catch (error) {
+      if(error.message === "EmailAlreadyInUse") {
+        res.clearCookie("refresh_token");
+        return res.redirect(`${frontendUrl}/sign-in?error=email_exists`);
+      }
+
+      return res.redirect(`${frontendUrl}/sign-in?error=oauth_failed`);
+    }
   }
 }

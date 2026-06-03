@@ -97,7 +97,7 @@ export function LoginForm({ className }: LoginFormProps) {
         onClick={handleGoogleAuth}
         variant="outline"
         type="button"
-        className="h-11 w-full gap-3 text-sm font-medium rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200"
+        className="h-11 w-full gap-3 text-sm font-medium rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200 cursor-pointer"
       >
         <svg className="size-4 shrink-0" viewBox="0 0 24 24">
           <path
@@ -200,7 +200,7 @@ export function LoginForm({ className }: LoginFormProps) {
         {/* Submit */}
         <Button
           type="submit"
-          className="h-11 w-full rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm shadow-md shadow-teal-500/20 hover:shadow-teal-500/30 transition-all duration-200 active:scale-[0.98]"
+          className="h-11 w-full rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm shadow-md shadow-teal-500/20 hover:shadow-teal-500/30 transition-all duration-200 active:scale-[0.98] cursor-pointer"
         >
           Sign in
         </Button>

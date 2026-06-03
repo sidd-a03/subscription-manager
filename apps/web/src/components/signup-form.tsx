@@ -104,7 +104,7 @@ export function SignUpForm({ className }: SignUpFormProps) {
         onClick={handleGoogleAuth}
         variant="outline"
         type="button"
-        className="h-11 w-full gap-3 text-sm font-medium rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200"
+        className="h-11 w-full cursor-pointer gap-3 text-sm font-medium rounded-xl border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all duration-200"
       >
         <svg className="size-4 shrink-0" viewBox="0 0 24 24">
           <path
@@ -201,7 +201,7 @@ export function SignUpForm({ className }: SignUpFormProps) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+              className="absolute cursor-pointer right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
               aria-label={showPassword ? "Hide password" : "Show password"}
             >
               {showPassword ? (
@@ -245,7 +245,7 @@ export function SignUpForm({ className }: SignUpFormProps) {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+              className="absolute cursor-pointer right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
               aria-label={showConfirmPassword ? "Hide password" : "Show password"}
             >
               {showConfirmPassword ? (
@@ -273,7 +273,7 @@ export function SignUpForm({ className }: SignUpFormProps) {
         {/* Submit */}
         <Button
           type="submit"
-          className="h-11 w-full rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm shadow-md shadow-teal-500/20 hover:shadow-teal-500/30 transition-all duration-200 active:scale-[0.98]"
+          className="h-11 w-full cursor-pointer rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm shadow-md shadow-teal-500/20 hover:shadow-teal-500/30 transition-all duration-200 active:scale-[0.98]"
         >
           Create account
         </Button>

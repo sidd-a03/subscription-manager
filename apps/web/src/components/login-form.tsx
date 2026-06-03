@@ -158,12 +158,12 @@ export function LoginForm({ className }: LoginFormProps) {
             >
               Password
             </label>
-            <Button
-              variant={"link"}
+            <button
+              type="button"
               className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors font-medium"
             >
               Forgot password?
-            </Button>
+            </button>
           </div>
           <div className="relative">
             <Input

@@ -1,9 +1,14 @@
-import React from "react"
+"use client"
+
 import { AuthCover } from "@/components/auth/AuthCover"
 import Link from "next/link"
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
+import { useTheme } from "next-themes"
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
+
+  const { resolvedTheme, setTheme } = useTheme();
+
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       {/* Left — form panel */}
@@ -37,6 +42,8 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
           {/* Theme toggler */}
           <AnimatedThemeToggler
+            theme={resolvedTheme === "dark" ? "dark" : "light"}
+            onThemeChange={setTheme}
             className="flex size-9 items-center justify-center rounded-lg text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800 transition-colors duration-200 cursor-pointer"
           />
         </div>

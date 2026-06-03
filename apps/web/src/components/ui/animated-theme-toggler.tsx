@@ -147,6 +147,11 @@ export const AnimatedThemeToggler = ({
   const [internalIsDark, setInternalIsDark] = useState(false)
   const isDark = isControlled ? theme === "dark" : internalIsDark
   const buttonRef = useRef<HTMLButtonElement>(null)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   useEffect(() => {
     if (isControlled) return
@@ -202,7 +207,7 @@ export const AnimatedThemeToggler = ({
       }
     }
 
-    if (typeof document.startViewTransition !== "function") {
+    if (typeof (document as any).startViewTransition !== "function") {
       applyTheme()
       return
     }
@@ -218,6 +223,7 @@ export const AnimatedThemeToggler = ({
 
     const root = document.documentElement
     root.dataset.magicuiThemeVt = "active"
+    root.dataset.magicuiThemeVt = "active"
     root.style.setProperty(
       "--magicui-theme-toggle-vt-duration",
       `${duration}ms`
@@ -231,7 +237,7 @@ export const AnimatedThemeToggler = ({
       root.style.removeProperty("--magicui-theme-vt-clip-from")
     }
 
-    const transition = document.startViewTransition(() => {
+    const transition = (document as any).startViewTransition(() => {
       flushSync(applyTheme)
     })
     if (typeof transition?.finished?.finally === "function") {
@@ -267,7 +273,7 @@ export const AnimatedThemeToggler = ({
       className={cn(className)}
       {...props}
     >
-      {isDark ? <Sun /> : <Moon />}
+      {mounted && (isDark ? <Sun /> : <Moon />)}
       <span className="sr-only">Toggle theme</span>
     </button>
   )

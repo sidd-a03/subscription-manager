@@ -1,5 +1,7 @@
-import authCoverImage from "../../public/images/auth-cover.png"
+import authCoverDark from "../../public/images/auth-cover-dark.png"
+import authCoverLight from "../../public/images/auth-cover.png"
 
 export const images = {
-  authCoverImage
+  authCoverDark,
+  authCoverLight,
 } as const

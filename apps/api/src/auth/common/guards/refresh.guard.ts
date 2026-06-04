@@ -13,20 +13,31 @@ export class RefreshTokenGuard implements CanActivate {
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
     
-    // Extract token from the cookie (assuming you named it 'refresh_token')
-    const refreshToken = request.cookies?.refresh_token;
+    let refreshToken = request.cookies?.refresh_token;
+
+    if (!refreshToken) {
+      const authHeader = request.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        refreshToken = authHeader.substring(7);
+      }
+    }
+
+    if (!refreshToken) {
+      refreshToken = request.headers['x-refresh-token'];
+    }
+    if (!refreshToken) {
+      refreshToken = request.body?.refresh_token;
+    }
 
     if (!refreshToken) {
       throw new UnauthorizedException('Refresh token is missing');
     }
 
     try {
-      // Verify the token
       const payload = await this.jwtService.verifyAsync(refreshToken, {
         secret: this.configService.get<string>('jwt.refresh_secret'),
       });
       
-      // Attach the payload AND the raw refresh token to the request
       request['user'] = { ...payload, refreshToken };
       
     } catch (error) {

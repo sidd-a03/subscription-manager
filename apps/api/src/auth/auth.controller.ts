@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Headers, HttpCode, HttpStatus, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { Throttle } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { SignUpDto } from './dto/sign-up.dto';
@@ -21,8 +21,15 @@ export class AuthController {
 
   private returnRefreshCookie(
     token: Tokens,
-    res: Response
+    res: Response,
+    clientType: string
   ) {
+
+    if(clientType === "mobile")
+      return {
+        access_token: token.access_token,
+        refresh_token: token.refresh_token
+      }
 
     res.cookie("refresh_token", token.refresh_token, {
       httpOnly: true,
@@ -49,11 +56,12 @@ export class AuthController {
   })
   async signUp(
     @Res({ passthrough: true }) res: Response,
-    @Body() signUpDto: SignUpDto
+    @Body() signUpDto: SignUpDto,
+    @Headers('x-client-type') clientType: string
   ) {
     const token = await this.authService.signUp(signUpDto);
 
-    return this.returnRefreshCookie(token, res);
+    return this.returnRefreshCookie(token, res, clientType);
   }
 
   @Throttle({ auth: { limit: 5, ttl: 60000 } })
@@ -69,11 +77,12 @@ export class AuthController {
   })
   async signIn(
     @Res({ passthrough: true }) res: Response,
-    @Body() signInDto: SignInDto
+    @Body() signInDto: SignInDto,
+    @Headers('x-client-type') clientType: string
   ) {
     const token = await this.authService.signIn(signInDto);
     
-    return this.returnRefreshCookie(token, res);
+    return this.returnRefreshCookie(token, res, clientType);
   }
 
   @UseGuards(AuthGuard)
@@ -90,8 +99,11 @@ export class AuthController {
   async logout(
     @GetCurrentUserId() userId: string,
     @Res({ passthrough: true }) res: Response,
+    @Headers('x-client-type') clientType: string,
   ): Promise<{ message: string }> {
-    res.clearCookie("refresh_token");
+    if (clientType !== 'mobile') {
+      res.clearCookie('refresh_token');
+    }
     return this.authService.logout(userId);
   }
 
@@ -112,10 +124,11 @@ export class AuthController {
     @GetCurrentUserId() userId: string,
     @GetCurrentUser("refreshToken") refreshToken: string,
     @Res({ passthrough: true }) res: Response,
+    @Headers('x-client-type') clientType: string
   ) {
     const token = await this.authService.refreshToken(userId, refreshToken);
 
-    return this.returnRefreshCookie(token, res);
+    return this.returnRefreshCookie(token, res, clientType);
   }
 
   @Get('google')
@@ -135,14 +148,15 @@ export class AuthController {
   })
   async googleAuthRedirect(
     @Req() req,
-    @Res({ passthrough: true }) res: Response
+    @Res({ passthrough: true }) res: Response,
+    @Headers('x-client-type') clientType: string
   ) {
     const frontendUrl = process.env.FRONTEND_URL;
     
     try {
       const token = await this.authService.googleLogIn(req.user);
 
-      this.returnRefreshCookie(token, res);
+      this.returnRefreshCookie(token, res, clientType);
 
       return res.redirect(`${frontendUrl}/auth/callback?token=${token.access_token}`);
     } catch (error) {

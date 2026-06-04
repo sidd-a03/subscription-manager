@@ -1,0 +1,1 @@
+export { VerifyOtpDto } from 'src/otp/dto/verify-otp.dto';

@@ -16,5 +16,8 @@ export default () => ({
   },
   backend: {
     url: process.env.BACKEND_URL!
+  },
+  otp: {
+    secret: process.env.OTP_SECRET!
   }
 });

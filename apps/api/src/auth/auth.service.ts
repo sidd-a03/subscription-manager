@@ -7,14 +7,32 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { Tokens } from './types';
 import { SignInDto } from './dto/sign-in.dto';
+import { OtpService } from 'src/otp/otp.service';
+import { VerifyOtpDto } from 'src/otp/dto/verify-otp.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
+    private pepper: string;
+
     constructor(
         private readonly userService: UsersService,
         private readonly jwtService: JwtService,
-        private readonly configService: ConfigService
-    ) {}
+        private readonly configService: ConfigService,
+        private readonly otpService: OtpService
+    ) {
+        this.pepper = this.configService.get<string>("pepper.argon_pepper")!;
+    }
+
+    private async hashPasswordGenerator(password: string): Promise<string> {
+        return await argon2.hash(password, {
+            type: argon2.argon2id,
+            secret: Buffer.from(this.pepper),
+            memoryCost: 65536,
+            timeCost: 1,
+            parallelism: 1,            
+        });
+    }
 
     async signUp(userData: SignUpDto): Promise<Tokens> {
         const existingUser = await this.userService.findByEmail(userData.email);
@@ -22,15 +40,7 @@ export class AuthService {
         if(existingUser)
             throw new ConflictException("User with this email already exist");
 
-        const pepper = this.configService.get<string>("pepper.argon_pepper")
-
-        const hashedPassword = await argon2.hash(userData.password, {
-            type: argon2.argon2id,
-            secret: Buffer.from(pepper!),
-            memoryCost: 65536,
-            timeCost: 1,
-            parallelism: 1,            
-        });
+        const hashedPassword = await this.hashPasswordGenerator(userData.password);
 
         const newUser = await this.userService.create({
             name: userData.name,
@@ -54,10 +64,8 @@ export class AuthService {
         if(!user.password)
             throw new UnauthorizedException("This account uses Google sign-in. Please log in with Google.");
 
-        const pepper = this.configService.get<string>("pepper.argon_pepper")
-
         const passwordMatch = await argon2.verify(user.password, userData.password, {
-            secret: Buffer.from(pepper!)
+            secret: Buffer.from(this.pepper)
         })
 
         if(!passwordMatch)
@@ -155,5 +163,46 @@ export class AuthService {
 
         return tokens;
         
+    }
+
+    async forgotPassword(email: string): Promise<{ otpCode: string, fullHash: string }> {
+        const user = await this.userService.findByEmail(email);
+        
+        if(!user)
+            throw new UnauthorizedException("Unauthorized");
+
+        if(user && user.password === null)
+            throw new UnauthorizedException("This account uses Google sign-in. Please log in with Google.");
+        
+        return this.otpService.generateStateLessOtp(email);
+    }
+
+    verifyOtp(data: VerifyOtpDto): { verified: boolean } {
+        const verified = this.otpService.verifyStateLessOtp(data);
+        return { verified };
+    }
+
+    async resetPassword(resetData: ResetPasswordDto): Promise<{ message: string }> {
+        const isTokenValid = this.otpService.verifyStateLessOtp({
+            email: resetData.email,
+            otpFromFrontend: resetData.otpCode,
+            fullHashFromFrontend: resetData.fullHash,
+        });
+
+        if (!isTokenValid)
+            throw new UnauthorizedException("Invalid or expired verification token");
+
+        const user = await this.userService.findByEmail(resetData.email);
+
+        if (!user)
+            throw new UnauthorizedException("Unauthorized");
+
+        if (user.password === null)
+            throw new UnauthorizedException("This account uses Google sign-in. Please log in with Google.");
+
+        const hashedPassword = await this.hashPasswordGenerator(resetData.newPassword);
+        await this.userService.updatePassword(user.id, hashedPassword);
+
+        return { message: "Password reset successfully" };
     }
 }

@@ -8,6 +8,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import configuration from './config/configuration';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
+import { OtpModule } from './otp/otp.module';
 
 @Module({
   imports: [
@@ -34,7 +35,8 @@ import { APP_GUARD } from '@nestjs/core';
         limit: 20,
         ttl: 60000
       }
-    ])
+    ]),
+    OtpModule
   ],
   controllers: [AppController],
   providers: [

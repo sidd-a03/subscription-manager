@@ -11,6 +11,9 @@ import type { Response } from 'express';
 import type { Tokens } from './types';
 import { AuthGuard } from './common/guards/access.guard';
 import { AuthGuard as GoogleAuthGuard } from '@nestjs/passport';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { VerifyOtpDto } from './dto/verify-otp.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -150,5 +153,34 @@ export class AuthController {
 
       return res.redirect(`${frontendUrl}/sign-in?error=oauth_failed`);
     }
+  }
+
+  @Throttle({ auth: { limit: 5, ttl: 60000 } })
+  @Post("forgot-password")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Forgot password" })
+  @ApiUnauthorizedResponse({ description: "Unauthorized" })
+  async forgotPassword(@Body() { email }: ForgotPasswordDto) {
+    return this.authService.forgotPassword(email);
+  }
+
+  @Throttle({ auth: { limit: 5, ttl: 60000 } })
+  @Post("verify-otp")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Verify OTP" })
+  @ApiCreatedResponse({ description: "OTP successfully verified" })
+  @ApiUnauthorizedResponse({ description: "Invalid or expired OTP" })
+  verifyOtp(@Body() data: VerifyOtpDto): { verified: boolean } {
+    return this.authService.verifyOtp(data);
+  }
+
+  @Throttle({ auth: { limit: 5, ttl: 60000 } })
+  @Post("reset-password")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Reset password" })
+  @ApiCreatedResponse({ description: "Password reset successfully" })
+  @ApiUnauthorizedResponse({ description: "Invalid or expired verification token" })
+  async resetPassword(@Body() resetData: ResetPasswordDto): Promise<{ message: string }> {
+    return this.authService.resetPassword(resetData);
   }
 }

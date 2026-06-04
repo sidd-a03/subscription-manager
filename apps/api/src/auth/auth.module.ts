@@ -8,11 +8,13 @@ import { AuthGuard } from './common/guards/access.guard';
 import { RefreshTokenGuard } from './common/guards/refresh.guard';
 import { GoogleStrategy } from './strategies/google.strategies';
 import { PassportModule } from '@nestjs/passport';
+import { OtpModule } from 'src/otp/otp.module';
 
 @Module({
   imports: [
     UsersModule,
     PassportModule,
+    OtpModule,
     JwtModule.registerAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

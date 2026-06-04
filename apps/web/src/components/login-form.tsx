@@ -13,6 +13,8 @@ import toast from "react-hot-toast"
 import { handleAuthError } from "@/lib/handle-auth-error"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import useAuthStore from "@/store/useAuthStore"
+import { step1Schema, step2Schema } from "@/validator/multi-step.schema"
+import ForgotPassword from "./forgot-password"
 
 interface LoginFormProps {
   className?: string
@@ -29,6 +31,118 @@ const schema = z.object({
 
 export function LoginForm({ className }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
+
+  const [view, setView] = useState<"signin" | "forgot-password">("signin")
+  const [forgotStep, setForgotStep] = useState<1 | 2 | 3>(1)
+  const [forgotEmail, setForgotEmail] = useState("")
+  const [fullHash, setFullHash] = useState("")
+  const [otpInput, setOtpInput] = useState("")
+  const [isSendingEmail, setIsSendingEmail] = useState(false)
+  const [isVerifyingOTP, setIsVerifyingOTP] = useState(false)
+  const [resendCooldown, setResendCooldown] = useState(0)
+  const [forgotErrors, setForgotErrors] = useState<{ email?: string; otp?: string }>({})
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false)
+
+  useEffect(() => {
+    if (resendCooldown <= 0) return
+    const interval = setInterval(() => {
+      setResendCooldown((prev) => prev - 1)
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [resendCooldown])
+
+  const handleSendOTP = async () => {
+    const result = step1Schema.safeParse({ email: forgotEmail })
+    if (!result.success) {
+      const errorMsg = result.error.issues[0]?.message || "Invalid email"
+      setForgotErrors({ email: errorMsg })
+      return
+    }
+
+    setIsSendingEmail(true)
+    setForgotErrors({})
+
+    try {
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/forgot-password`,
+        { email: forgotEmail.trim().toLowerCase() }
+        
+      )
+
+      setFullHash(res.data.fullHash)
+      toast.success(`Verification code sent! Check your inbox. ${res.data.otpCode}`)
+      setForgotStep(2)
+      setOtpInput("")
+      setResendCooldown(30)
+    } catch (err: any) {
+      const msg = err?.response?.data?.message
+      if (msg === "Unauthorized") {
+        setForgotErrors({ email: "No account found with this email address." })
+      } else {
+        toast.error("This account uses Google sign-in. Please log in with Google.")
+      }
+    } finally {
+      setIsSendingEmail(false)
+    }
+  }
+
+  const handleResendOTP = async () => {
+    if (resendCooldown > 0) return
+
+    setIsSendingEmail(true)
+    try {
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/forgot-password`,
+        { email: forgotEmail.trim().toLowerCase() }
+      )
+
+      setFullHash(res.data.fullHash)
+      setOtpInput("")
+      setForgotErrors({})
+      toast.success(`A new verification code has been sent! ${res.data.otpCode}`)
+      setResendCooldown(30)
+    } catch (err) {
+      toast.error("Failed to resend code. Please try again.")
+    } finally {
+      setIsSendingEmail(false)
+    }
+  }
+
+  const handleVerifyOTP = async () => {
+    const result = step2Schema.safeParse({ otp: otpInput })
+    if (!result.success) {
+      const errorMsg = result.error.issues[0]?.message || "Invalid code"
+      setForgotErrors({ otp: errorMsg })
+      return
+    }
+
+    setIsVerifyingOTP(true)
+    setForgotErrors({})
+
+    try {
+      const res = await axios.post(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/verify-otp`,
+        {
+          email: forgotEmail.trim().toLowerCase(),
+          otpFromFrontend: otpInput,
+          fullHashFromFrontend: fullHash,
+        }
+      )
+
+      if (res.data?.verified) {
+        toast.success("Code verified successfully!")
+        setForgotStep(3)
+      } else {
+        setForgotErrors({ otp: "Invalid or expired verification code. Please try again." })
+        toast.error("Invalid verification code.")
+      }
+    } catch (err: any) {
+      setForgotErrors({ otp: "Invalid or expired verification code. Please try again." })
+      toast.error("Verification failed. Please try again.")
+    } finally {
+      setIsVerifyingOTP(false)
+    }
+  }
   const router = useRouter();
   const searchParams = useSearchParams();
   const pathname = usePathname();
@@ -78,6 +192,36 @@ export function LoginForm({ className }: LoginFormProps) {
 
   const handleGoogleAuth = () => {
     window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/google`
+  }
+
+  if (view === "forgot-password") {
+    return (
+      <ForgotPassword
+        className={className}
+        forgotStep={forgotStep}
+        setForgotStep={setForgotStep}
+        forgotEmail={forgotEmail}
+        setForgotEmail={setForgotEmail}
+        fullHash={fullHash}
+        setFullHash={setFullHash}
+        otpInput={otpInput}
+        setOtpInput={setOtpInput}
+        isSendingEmail={isSendingEmail}
+        setIsSendingEmail={setIsSendingEmail}
+        isVerifyingOTP={isVerifyingOTP}
+        setIsVerifyingOTP={setIsVerifyingOTP}
+        resendCooldown={resendCooldown}
+        setResendCooldown={setResendCooldown}
+        forgotErrors={forgotErrors}
+        setForgotErrors={setForgotErrors}
+        isResetDialogOpen={isResetDialogOpen}
+        setIsResetDialogOpen={setIsResetDialogOpen}
+        handleSendOTP={handleSendOTP}
+        handleResendOTP={handleResendOTP}
+        handleVerifyOTP={handleVerifyOTP}
+        setView={setView}
+      />
+    )
   }
 
   return (
@@ -160,7 +304,8 @@ export function LoginForm({ className }: LoginFormProps) {
             </label>
             <button
               type="button"
-              className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors font-medium"
+              onClick={() => setView("forgot-password")}
+              className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors font-medium cursor-pointer"
             >
               Forgot password?
             </button>

@@ -27,9 +27,12 @@ const schema = z.object({
   email: z.email({
     message: "Invalid email"
   }),
-  password: z.string().min(8, {
-    message: "Password must be at least 8 characters"
-  }),
+  password: z.string()
+    .min(8, { message: "Password must be at least 8 characters" })
+    .regex(/[A-Z]/, { message: "Must contain at least one uppercase letter" })
+    .regex(/[0-9]/, { message: "Must contain at least one number" })
+    .regex(/[\!@#\$%\^&\*\(\)\-_\+=\[\]\{\};':",\./<>\?\|\\]/, { message: "Must contain at least one special character" }),
+    
   confirmPassword: z.string().min(8, {
     message: "Confirm Password must be at least 8 characters"
   })
@@ -55,8 +58,6 @@ export function SignUpForm({ className }: SignUpFormProps) {
     },
     mode: "onTouched"
   })
-
-  const password = watch("password", "")
 
   const onSubmit: SubmitHandler<z.infer<typeof schema>> = async (data) => {
     try {

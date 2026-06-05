@@ -13,6 +13,7 @@ import toast from "react-hot-toast"
 import { handleAuthError } from "@/lib/handle-auth-error"
 import { useRouter } from "next/navigation"
 import useAuthStore from "@/store/useAuthStore"
+import { AuthResponseDto } from "@repo/dto"
 
 interface SignUpFormProps {
   className?: string
@@ -65,9 +66,9 @@ export function SignUpForm({ className }: SignUpFormProps) {
         name: data.fullName.trim(),
         email: data.email.trim().toLowerCase(),
         password: data.password
-      })
+      }, { withCredentials: true })
 
-      const { access_token } = res.data
+      const { access_token } = res.data as AuthResponseDto
       if (access_token) {
         removeToken()
         setToken(access_token)

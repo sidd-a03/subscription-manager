@@ -15,19 +15,12 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import useAuthStore from "@/store/useAuthStore"
 import { step1Schema, step2Schema } from "@/validator/multi-step.schema"
 import ForgotPassword from "./forgot-password"
+import { AuthResponseDto, SignInDto, signInSchema } from "@repo/dto"
 
 interface LoginFormProps {
   className?: string
 }
 
-const schema = z.object({
-  email: z.email({
-    message: "Invalid email"
-  }),
-  password: z.string().min(8, {
-    message: "password length must be at least 8 characters"
-  })
-})
 
 export function LoginForm({ className }: LoginFormProps) {
   const [showPassword, setShowPassword] = useState(false)
@@ -158,8 +151,8 @@ export function LoginForm({ className }: LoginFormProps) {
 
   const { setToken, removeToken } = useAuthStore();
 
-  const { register, handleSubmit, setError, formState: { errors } } = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
+  const { register, handleSubmit, setError, formState: { errors } } = useForm<SignInDto>({
+    resolver: zodResolver(signInSchema),
     defaultValues: {
       email: "",
       password: ""
@@ -167,14 +160,14 @@ export function LoginForm({ className }: LoginFormProps) {
     mode: "onTouched"
   });
 
-  const onSubmit: SubmitHandler<z.infer<typeof schema>> = async (data) => {
+  const onSubmit: SubmitHandler<SignInDto> = async (data) => {
     try {
       const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/sign-in`, {
         email: data.email.trim().toLowerCase(),
         password: data.password
-      })
+      }, { withCredentials: true })
 
-      const { access_token } = res.data
+      const { access_token } = res.data as AuthResponseDto
       if (access_token) {
         removeToken()
         setToken(access_token)

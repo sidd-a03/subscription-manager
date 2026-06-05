@@ -1,4 +1,3 @@
-
 import {
   CanActivate,
   ExecutionContext,
@@ -13,7 +12,7 @@ import { Request } from 'express';
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -23,10 +22,10 @@ export class AuthGuard implements CanActivate {
       throw new UnauthorizedException();
     }
     try {
-      // 💡 Here the JWT secret key that's used for verifying the payload 
+      // 💡 Here the JWT secret key that's used for verifying the payload
       // is the key that was passed in the JwtModule
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.configService.get<string>("jwt.access_secret")
+        secret: this.configService.get<string>('jwt.access_secret'),
       });
       // 💡 We're assigning the payload to the request object here
       // so that we can access it in our route handlers

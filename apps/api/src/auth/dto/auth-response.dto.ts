@@ -1,11 +1,4 @@
-import { ApiProperty } from "@nestjs/swagger";
+import { createZodDto } from 'nestjs-zod';
+import { authResponseSchema } from '@repo/dto';
 
-export class AuthResponseDto {
-    @ApiProperty({ 
-        type: String, 
-        required: true,
-        description: "JWT Access Token",
-        example: "access_token"
-    })
-    access_token: string;
-}
+export class AuthResponseDto extends createZodDto(authResponseSchema) {}

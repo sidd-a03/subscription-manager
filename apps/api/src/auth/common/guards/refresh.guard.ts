@@ -1,5 +1,10 @@
 // src/auth/guards/refresh-token.guard.ts
-import { CanActivate, ExecutionContext, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 
@@ -12,7 +17,7 @@ export class RefreshTokenGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    
+
     let refreshToken = request.cookies?.refresh_token;
 
     if (!refreshToken) {
@@ -37,13 +42,12 @@ export class RefreshTokenGuard implements CanActivate {
       const payload = await this.jwtService.verifyAsync(refreshToken, {
         secret: this.configService.get<string>('jwt.refresh_secret'),
       });
-      
+
       request['user'] = { ...payload, refreshToken };
-      
     } catch (error) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
-    
+
     return true;
   }
 }

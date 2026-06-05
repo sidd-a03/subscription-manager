@@ -14,29 +14,29 @@ import { OtpModule } from './otp/otp.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      load: [configuration]
+      load: [configuration],
     }),
     PrismaModule,
     AuthModule,
     UsersModule,
     ThrottlerModule.forRoot([
       {
-        name: "default",
+        name: 'default',
         limit: 100,
-        ttl: 60000
+        ttl: 60000,
       },
       {
-        name: "auth",
+        name: 'auth',
         limit: 5,
-        ttl: 60000
+        ttl: 60000,
       },
       {
-        name: "refresh",
+        name: 'refresh',
         limit: 20,
-        ttl: 60000
-      }
+        ttl: 60000,
+      },
     ]),
-    OtpModule
+    OtpModule,
   ],
   controllers: [AppController],
   providers: [
@@ -44,7 +44,7 @@ import { OtpModule } from './otp/otp.module';
     {
       provide: APP_GUARD,
       useClass: ThrottlerGuard,
-    }
+    },
   ],
 })
 export class AppModule {}

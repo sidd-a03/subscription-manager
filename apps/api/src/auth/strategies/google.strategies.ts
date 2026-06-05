@@ -7,8 +7,8 @@ import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
   constructor(configService: ConfigService) {
-    const backendUrl = configService.get<string>("backend.url");
-    
+    const backendUrl = configService.get<string>('backend.url');
+
     super({
       clientID: configService.getOrThrow<string>('google.client_id'),
       clientSecret: configService.getOrThrow<string>('google.client_secret'),
@@ -17,16 +17,21 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     });
   }
 
-  async validate(accessToken: string, refreshToken: string, profile: any, done: VerifyCallback): Promise<any> {
+  async validate(
+    accessToken: string,
+    refreshToken: string,
+    profile: any,
+    done: VerifyCallback,
+  ): Promise<any> {
     const { name, emails, photos } = profile;
-    
+
     const user = {
       email: emails[0].value,
       firstName: name.givenName,
       lastName: name.familyName,
-      picture: photos?.[0]?.value, 
+      picture: photos?.[0]?.value,
     };
-    
+
     done(null, user);
   }
 }

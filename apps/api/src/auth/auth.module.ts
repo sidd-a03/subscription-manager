@@ -20,12 +20,12 @@ import { OtpModule } from 'src/otp/otp.module';
       useFactory: (configService: ConfigService) => ({
         secret: configService.get<string>('jwt.access_secret'),
         signOptions: {
-          expiresIn: "15m"
-        }
-      })
-    })
+          expiresIn: '15m',
+        },
+      }),
+    }),
   ],
   controllers: [AuthController],
   providers: [AuthService, AuthGuard, RefreshTokenGuard, GoogleStrategy],
 })
-export class AuthModule { }
+export class AuthModule {}

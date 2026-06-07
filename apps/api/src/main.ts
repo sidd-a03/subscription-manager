@@ -15,10 +15,12 @@ async function bootstrap() {
 
   app.use(cookieParser());
 
-  const allowedOrigin = process.env.FRONTEND_URL || true;
+  const allowedOrigin = [
+    process.env.FRONTEND_URL!
+  ] ;
 
   app.enableCors({
-    origin: allowedOrigin,
+    origin: isProduction ? allowedOrigin : true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization', 'x-client-type'],

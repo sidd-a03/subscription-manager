@@ -29,7 +29,7 @@ export class AuthService {
     private readonly configService: ConfigService,
     private readonly otpService: OtpService,
   ) {
-    this.pepper = this.configService.get<string>('pepper.argon_pepper')!;
+    this.pepper = this.configService.getOrThrow<string>('pepper.argon_pepper')!;
   }
 
   private async hashPasswordGenerator(password: string): Promise<string> {
@@ -105,12 +105,12 @@ export class AuthService {
 
     const [access_token, refresh_token] = await Promise.all([
       this.jwtService.signAsync(jwtPayload, {
-        secret: this.configService.get<string>('jwt.access_secret'),
+        secret: this.configService.getOrThrow<string>('jwt.access_secret'),
         expiresIn: '15m',
       }),
 
       this.jwtService.signAsync(jwtPayload, {
-        secret: this.configService.get<string>('jwt.refresh_secret'),
+        secret: this.configService.getOrThrow<string>('jwt.refresh_secret'),
         expiresIn: '7d',
       }),
     ]);
@@ -168,7 +168,7 @@ export class AuthService {
       user = await this.userService.create({
         email: reqUser.email,
         name: `${reqUser.firstName} ${reqUser.lastName}`,
-        password: null, // No password for Google-auth users
+        password: null, 
         avatarUrl: reqUser.picture,
       });
     } else if (!user.avatarUrl && reqUser.picture) {

@@ -1,5 +1,16 @@
 import * as z from "zod";
 
+export const UserDataSchema = z.object({
+  id: z.string(),
+  email: z.email(),
+  name: z.string(),
+  avatarUrl: z.url().nullable(),
+  role: z.enum(["User", "Admin"]),
+  createdAt: z.date(),
+});
+
+export type UserDataDto = z.infer<typeof UserDataSchema>;
+
 export const signUpSchema = z.object({
   name: z
     .string()
@@ -84,6 +95,8 @@ export type ResetPasswordDto = z.infer<typeof resetPasswordSchema>;
 
 export const authResponseSchema = z.object({
   access_token: z.string(),
+  refresh_token: z.string(),
+  userData: UserDataSchema,
 });
 
 export const mobileAuthResponseSchema = authResponseSchema.extend({

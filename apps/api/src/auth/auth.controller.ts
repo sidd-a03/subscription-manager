@@ -36,32 +36,42 @@ import {
   ApiVerifyOtp,
   ApiResetPassword,
 } from './common/decorators/swagger.decorator';
+import { UserDataDto } from '@repo/dto/auth';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   private returnRefreshCookie(
-    token: Tokens,
+    tokens: Tokens,
     res: Response,
     clientType: string,
+    userData?: UserDataDto
   ) {
-    if (clientType === 'mobile')
-      return {
-        access_token: token.access_token,
-        refresh_token: token.refresh_token,
+    if (clientType === 'mobile') {
+      return userData ? {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token,
+        userData
+      } : {
+        access_token: tokens.access_token,
+        refresh_token: tokens.refresh_token
       };
+    }
 
-    res.cookie('refresh_token', token.refresh_token, {
+    res.cookie('refresh_token', tokens.refresh_token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
-    return {
-      access_token: token.access_token,
-    };
+    return userData ? {
+      access_token: tokens.access_token,
+      userData: userData
+    } : {
+      access_token: tokens.access_token
+    }
   }
 
   @Throttle({ auth: { limit: 5, ttl: 60000 } })
@@ -73,9 +83,14 @@ export class AuthController {
     @Body() signUpDto: SignUpDto,
     @Headers('x-client-type') clientType: string,
   ) {
-    const token = await this.authService.signUp(signUpDto);
+    const { access_token, refresh_token, userData } = await this.authService.signUp(signUpDto);
 
-    return this.returnRefreshCookie(token, res, clientType);
+    const tokens = {
+      access_token,
+      refresh_token
+    }
+
+    return this.returnRefreshCookie(tokens, res, clientType, userData);
   }
 
   @Throttle({ auth: { limit: 5, ttl: 60000 } })
@@ -87,9 +102,14 @@ export class AuthController {
     @Body() signInDto: SignInDto,
     @Headers('x-client-type') clientType: string,
   ) {
-    const token = await this.authService.signIn(signInDto);
+    const { access_token, refresh_token, userData } = await this.authService.signIn(signInDto);
 
-    return this.returnRefreshCookie(token, res, clientType);
+    const tokens = {
+      access_token,
+      refresh_token
+    }
+
+    return this.returnRefreshCookie(tokens, res, clientType, userData);
   }
 
   @UseGuards(AuthGuard)

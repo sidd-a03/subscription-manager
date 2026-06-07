@@ -17,6 +17,7 @@ import type {
   SignInDto,
   VerifyOtpDto,
   ResetPasswordDto,
+  AuthResponseDto,
 } from '@repo/dto';
 
 @Injectable()
@@ -42,7 +43,7 @@ export class AuthService {
     });
   }
 
-  async signUp(userData: SignUpDto): Promise<Tokens> {
+  async signUp(userData: SignUpDto): Promise<AuthResponseDto> {
     const existingUser = await this.userService.findByEmail(userData.email);
 
     if (existingUser)
@@ -51,8 +52,8 @@ export class AuthService {
     const hashedPassword = await this.hashPasswordGenerator(userData.password);
 
     const newUser = await this.userService.create({
-      name: userData.name,
-      email: userData.email,
+      name: userData.name.trim(),
+      email: userData.email.toLowerCase(),
       password: hashedPassword,
     });
 
@@ -60,10 +61,21 @@ export class AuthService {
 
     await this.updateHashRt(newUser.id, tokens.refresh_token);
 
-    return tokens;
+    return {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      userData: {
+        name: newUser.name,
+        email: newUser.email,
+        avatarUrl: newUser.avatarUrl,
+        createdAt: newUser.createdAt,
+        role: newUser.role,
+        id: newUser.id,
+      }
+    };
   }
 
-  async signIn(userData: SignInDto): Promise<Tokens> {
+  async signIn(userData: SignInDto): Promise<AuthResponseDto> {
     const user = await this.userService.findByEmail(userData.email);
 
     if (!user) throw new UnauthorizedException('Invalid credentials');
@@ -87,7 +99,18 @@ export class AuthService {
 
     await this.updateHashRt(user.id, tokens.refresh_token);
 
-    return tokens;
+    return {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      userData: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        avatarUrl: user.avatarUrl,
+        role: user.role,
+        createdAt: user.createdAt,
+      }      
+    };
   }
 
   async logout(userId: string): Promise<{ message: string }> {

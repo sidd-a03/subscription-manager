@@ -1,14 +1,13 @@
 import { verifyOtpSchema } from "@repo/dto";
-import { z } from "zod";
+import * as z from "zod";
 
-// Step 1: email collection — reuse the shared forgotPasswordSchema shape
 export const step1Schema = z.object({
-  email: z.string().email({
+  email: z.email({
     message: "Please enter a valid email",
   }),
 });
 
-// Step 2: OTP verification — reuse the shared verifyOtpSchema's otpCode field
+
 export const step2Schema = z.object({
   otp: verifyOtpSchema.shape.otpCode,
 });

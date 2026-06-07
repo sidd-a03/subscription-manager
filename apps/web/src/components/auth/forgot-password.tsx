@@ -1,12 +1,12 @@
 import { cn } from '@/lib/utils'
 import React from 'react'
 import { Mail, KeyRound, CheckCircle2, Loader2, ArrowLeft, RefreshCw } from 'lucide-react'
-import { Input } from './ui/input'
-import { Button } from './ui/button'
-import { InputOTP, InputOTPGroup, InputOTPSlot } from './ui/input-otp'
+import { Input } from '../ui/input'
+import { Button } from '../ui/button'
+import { InputOTP, InputOTPGroup, InputOTPSlot } from '../ui/input-otp'
 import axios from 'axios'
 import toast from 'react-hot-toast'
-import { ResetPasswordDialog } from '@/components/reset-password-dialog'
+import { ResetPasswordDialog } from '@/components/auth/reset-password-dialog'
 
 interface ForgotPasswordProps {
   className?: string

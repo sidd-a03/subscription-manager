@@ -13,19 +13,21 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Svg, { Path } from 'react-native-svg'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { signInSchema, type SignInDto } from '@repo/dto'
+import { AuthResponseDto, signInSchema, type SignInDto } from '@repo/dto'
 import { Button, Input, TextField, Label, FieldError, useToast } from 'heroui-native'
 import * as SecureStore from 'expo-secure-store'
 import { useRouter, Link } from 'expo-router'
 import { useUniwind } from "uniwind"
 import useAuthStore from '@/store/useAuthStore'
 import { handleAuthError } from '@/lib/handle-auth-error'
+import useUserDataStore from '@/store/useUserData'
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const { theme } = useUniwind()
   const { setToken, removeToken } = useAuthStore();
+  const { setUserData, removeUserData } = useUserDataStore();
   const { toast } = useToast();
 
   const {
@@ -59,7 +61,12 @@ const SignIn = () => {
         }
       )
 
-      const { access_token, refresh_token } = res.data
+      const { access_token, refresh_token, userData } = res.data as AuthResponseDto
+
+      if(userData) {
+        removeUserData();
+        setUserData(userData);
+      }
 
       if(access_token){
         removeToken();

@@ -20,6 +20,8 @@ import { useUniwind } from 'uniwind'
 import useAuthStore from '@/store/useAuthStore'
 import axios from 'axios'
 import { handleAuthError } from '@/lib/handle-auth-error'
+import { AuthResponseDto } from '@repo/dto'
+import useUserDataStore from '@/store/useUserData'
 
 const signUpSchema = z.object({
   fullName: z.string().min(3, {
@@ -51,7 +53,8 @@ const SignUp = () => {
   const router = useRouter()
   const { theme } = useUniwind();
   const { setToken, removeToken } = useAuthStore();
-  const { toast } = useToast(); 
+  const { setUserData, removeUserData } = useUserDataStore()
+  const { toast } = useToast();
 
   const {
     control,
@@ -90,7 +93,13 @@ const SignUp = () => {
 
 
 
-      const { access_token, refresh_token } = res.data
+      const { access_token, refresh_token, userData } = res.data as AuthResponseDto
+
+      if(userData){
+        removeUserData();
+        setUserData(userData)
+      }
+      
       if (access_token) {
         removeToken() 
         setToken(access_token)

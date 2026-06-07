@@ -7,6 +7,7 @@ export {
   resetPasswordSchema,
   authResponseSchema,
   mobileAuthResponseSchema,
+  UserDataSchema
 } from "./auth/index";
 
 export type {
@@ -17,4 +18,5 @@ export type {
   ResetPasswordDto,
   AuthResponseDto,
   MobileAuthResponseDto,
+  UserDataDto
 } from "./auth/index";
